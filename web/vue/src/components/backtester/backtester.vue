@@ -43,7 +43,7 @@ export default {
       const req = {
         gekkoConfig: this.config,
         data: {
-          candleProps: ['close', 'start'],
+          candleProps: ['time', 'open', 'high', 'low', 'close', 'start', 'volume'],
           indicatorResults: true,
           report: true,
           roundtrips: true,
