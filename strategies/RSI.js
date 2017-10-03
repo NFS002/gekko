@@ -34,12 +34,12 @@ method.init = function() {
 // for debugging purposes log the last
 // calculated parameters.
 method.log = function(candle) {
-  var digits = 8;
-  var rsi = this.indicators.rsi;
+  // var digits = 8;
+  // var rsi = this.indicators.rsi;
 
-  log.debug('calculated RSI properties for candle:');
-  log.debug('\t', 'rsi:', rsi.rsi.toFixed(digits));
-  log.debug('\t', 'price:', candle.close.toFixed(digits));
+  // log.debug('calculated RSI properties for candle:');
+  // log.debug('\t', 'rsi:', rsi.rsi.toFixed(digits));
+  // log.debug('\t', 'price:', candle.close.toFixed(digits));
 }
 
 method.check = function() {

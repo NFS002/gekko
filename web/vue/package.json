@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "es2015": "0.0.0",
+    "highcharts": "^5.0.14",
     "jade": "^1.11.0",
     "techan": "^0.8.0",
     "webpack-dev-middleware": "^1.12.0",
