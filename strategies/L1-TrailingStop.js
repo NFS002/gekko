@@ -6,7 +6,9 @@
 //    if movingStopValue is true, it will be a trailing stopValue(StopValue = HighestValue - trailingValueIncrement),
 //    if not it will be a fixed value specified by initialStopValue.
 // Status:
-//    This has had minimal testing so don't trust it.
+//    This has had minimal testing so don't trust it.
+//Known Issues:
+//If initial market value is larger than the buy value, Gekko will immediately purchase which could lead to a significant loss
 var log = require('../core/log');
 
 var strat = {};
