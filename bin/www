@@ -1,2 +1,2 @@
 #node ../gekko config="~/gekko/config.js" --ui
-node ../gekko --ui
+NODE_ENV=NODE_ENV=development node ../gekko --ui
