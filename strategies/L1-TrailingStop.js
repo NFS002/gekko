@@ -49,28 +49,10 @@ strat.update = function (candle) {
       log.debug("New highest value");
 
       if (this.trend.highestValue == 0) {
-        log.debug("First Run");
-
-        if (this.settings.initialStopValue == 0) {
-          log.debug("No initial stop value configured");
-          if (this.settings.buyPrice > 0) {
-            log.debug("Use configured buy price as bases for stop price");
-            this.trend.stopValue = this.settings.buyPrice - this.settings.trailingValueIncrement;
-          }
-          else {
-            log.debug("Use last close value as bases for stop price");
-            this.trend.stopValue = this.trend.currentValue - this.settings.trailingValueIncrement;
-          }
-
-          log.debug("New StopValue:" + this.trend.stopValue);
-        }
-        else {
-          log.debug("Use configured initial stop value");
-          this.trend.stopValue = this.settings.initialStopValue;
-          log.debug("New StopValue:" + this.settings.initialStopValue);
-        }
+        this.configureFirstRun(this.settings, this.trend);
       }
       else {
+        //
         if (this.trend.movingStopValue) {
           this.trend.stopValue = this.trend.currentValue - this.this.settings.trailingValueIncrement;
           log.debug("Updating StopValue to " + this.trend.stopValue);
@@ -103,12 +85,14 @@ strat.check = function () {
 
       log.debug("Selling @", this.trend.currentValue);
       log.debug("Profit:", (this.trend.currentValue - this.settings.buyPrice));
+      log.debug("Trading Finished");
       return;
     }
-    else if (this.settings.buy && this.trend.currentValue >= this.settings.buyPrice && !this.trend.purchased) {
+    else if (this.shouldBuy(this.settings, this.trend)) {
       this.advice("long");
 
       if (this.settings.movingStopValue) {
+        // Trade starts here, reset stop value
         this.trend.stopValue = this.trend.currentValue - this.settings.trailingValueIncrement;
       }
 
@@ -122,6 +106,33 @@ strat.check = function () {
   }
 
   this.advice();
+}
+
+strat.shouldBuy = function (settings, trend) {
+  return settings.buy && trend.currentValue >= settings.buyPrice && !trend.purchased;
+}
+
+strat.configureFirstRun = function (settings, trend) {
+  log.debug("First Run");
+
+  if (settings.initialStopValue == 0) {
+    log.debug("No initial stop value configured");
+    if (settings.buyPrice > 0) {
+      log.debug("Use configured buy price as bases for stop price");
+      trend.stopValue = settings.buyPrice - settings.trailingValueIncrement;
+    }
+    else {
+      log.debug("Use last close value as bases for stop price");
+      trend.stopValue = trend.currentValue - settings.trailingValueIncrement;
+    }
+
+    log.debug("New StopValue:" + trend.stopValue);
+  }
+  else {
+    log.debug("Use configured initial stop value");
+    trend.stopValue = settings.initialStopValue;
+    log.debug("New StopValue:" + settings.initialStopValue);
+  }
 }
 
 module.exports = strat;
