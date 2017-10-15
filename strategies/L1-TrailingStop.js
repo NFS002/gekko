@@ -1,16 +1,14 @@
-// This is a basic example strategy for Gekko.
-// For more information on everything please refer
-// to this document:
-//
-// https://gekko.wizb.it/docs/strategies/creating_a_strategy.html
-//
-// The example below is pretty bad investment advice: on every new candle there is
-// a 10% chance it will recommend to change your position (to either
-// long or short).
-
+// This is an initial implementation of a Trailing stop order strategy.
+// If buy is set to true the strategy will attempt to buy the currency at the specified buyPrice.
+// If things go as expected and sell is set to true, the stock will be sold at the specified sellPrice.   
+// Lastly, if things don't go that well the stock will be sold at it's stopValue.
+// The stopValue is calcualted as follows:
+//    if movingStopValue is true, it will be a trailing stopValue(StopValue = HighestValue - trailingValueIncrement),
+//    if not it will be a fixed value specified by initialStopValue.
+// Status:
+//    This has had minimal testing so don't trust it.
 var log = require('../core/log');
 
-// Let's create our own strat
 var strat = {};
 
 // Prepare everything our method needs
@@ -67,12 +65,10 @@ strat.update = function (candle) {
         else {
           log.debug("Use configured initial stop value");
           this.trend.stopValue = this.settings.initialStopValue;
-          log.debug("Stop value is now " + this.settings.initialStopValue);
+          log.debug("New StopValue:" + this.settings.initialStopValue);
         }
       }
       else {
-        log.debug("Non initial values");
-
         if (this.trend.movingStopValue) {
           this.trend.stopValue = this.trend.currentValue - this.this.settings.trailingValueIncrement;
           log.debug("Updating StopValue to " + this.trend.stopValue);
