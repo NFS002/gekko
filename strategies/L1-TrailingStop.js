@@ -8,24 +8,26 @@
 // Status:
 //    This has had minimal testing so don't trust it.
 //Known Issues:
-//If initial market value is larger than the buy value, Gekko will immediately purchase which could lead to a significant loss
+//  1) If initial market value is larger than the buy value, Gekko will immediately purchase which could lead to a significant loss
+//  2) If buy is true, trailing stopOrder should only occur once currency has been purchased.
+
 var log = require('../core/log');
 
 var strat = {};
 
 // Prepare everything our method needs
 strat.init = function () {
-  console.log("Init Strategy");
+  log.debug("Init Strategy");
   this.requiredHistory = 0;
 
   this.trend = {
-    direction: 'none',
     highestValue: 0,
     currentValue: 0,
     stopValue: 0,
     purchased: false,
     currentTrend: "none",
-    completed: false
+    completed: false,
+    initialMarketValueHigherThanBuyPrice: false
   };
 
   if (this.trend.buy && this.trend.buyPrice == 0) {
@@ -44,7 +46,7 @@ strat.update = function (candle) {
     // log.debug("Updating Strategy:" + JSON.stringify(candle));
     this.trend.currentValue = candle.close;
     log.debug("Current Value:" + this.trend.currentValue);
-
+    
     if (this.trend.currentValue >= this.trend.highestValue) {
       log.debug("New highest value");
 
@@ -53,8 +55,8 @@ strat.update = function (candle) {
       }
       else {
         //
-        if (this.trend.movingStopValue) {
-          this.trend.stopValue = this.trend.currentValue - this.this.settings.trailingValueIncrement;
+        if (this.settings.movingStopValue) {
+          this.trend.stopValue = this.trend.currentValue - this.settings.trailingValueIncrement;
           log.debug("Updating StopValue to " + this.trend.stopValue);
         }
       }
@@ -83,7 +85,7 @@ strat.check = function () {
       this.advice("short");
       this.trend.completed = true;
 
-      log.debug("Selling @", this.trend.currentValue);
+      log.debug(">>>>>Selling @", this.trend.currentValue);
       log.debug("Profit:", (this.trend.currentValue - this.settings.buyPrice));
       log.debug("Trading Finished");
       return;
@@ -91,13 +93,14 @@ strat.check = function () {
     else if (this.shouldBuy(this.settings, this.trend)) {
       this.advice("long");
 
-      if (this.settings.movingStopValue) {
-        // Trade starts here, reset stop value
-        this.trend.stopValue = this.trend.currentValue - this.settings.trailingValueIncrement;
-      }
+      // if (this.settings.movingStopValue) {
+      //   // Trade starts here, reset stop value
+      //   this.trend.stopValue = this.trend.currentValue - this.settings.trailingValueIncrement;
+      //   log.debug("Updating StopValue to " + this.trend.stopValue);
+      // }
 
       this.trend.purchased = true;
-      log.debug("buying @", this.trend.currentValue);
+      log.debug(">>>>>buying @", this.trend.currentValue);
       return;
     }
     else {
@@ -106,10 +109,6 @@ strat.check = function () {
   }
 
   this.advice();
-}
-
-strat.shouldBuy = function (settings, trend) {
-  return settings.buy && trend.currentValue >= settings.buyPrice && !trend.purchased;
 }
 
 strat.configureFirstRun = function (settings, trend) {
@@ -132,6 +131,26 @@ strat.configureFirstRun = function (settings, trend) {
     log.debug("Use configured initial stop value");
     trend.stopValue = settings.initialStopValue;
     log.debug("New StopValue:" + settings.initialStopValue);
+  }
+
+  if (settings.buy) {
+    trend.initialMarketValueHigherThanBuyPrice = trend.currentValue > settings.buyPrice;
+    log.debug("InitialMarketValueHigherThanBuyPrice:" + trend.initialMarketValueHigherThanBuyPrice);
+    log.debug(trend.currentValue);
+  }
+}
+
+strat.shouldBuy = function (settings, trend) {
+  if (!trend.purchased && settings.buy) {
+    if (!trend.initialMarketValueHigherThanBuyPrice) {
+      return trend.currentValue >= settings.buyPrice;
+    }
+    else {
+      return trend.currentValue <= settings.buyPrice;
+    }
+  }
+  else {
+    return false;
   }
 }
 
