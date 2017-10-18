@@ -9,7 +9,7 @@
 // Status:
 //    This has had minimal testing so don't trust it.
 // Known Issues:
-//  1) Buy purchase isn't executed on first buy
+//  1) Buy purchase isn't executed on first candle
 
 var log = require('../core/log');
 
