@@ -6,7 +6,7 @@
 //    if movingStopValue is true, it will be a trailing stopValue(StopValue = HighestValue - trailingValueIncrement),
 //    if not it will be a fixed value specified by initialStopValue.
 // Status:
-//    This has had minimal testing so don't trust it.
+//    This has had minimal testing so don't trust it.
 //Known Issues:
 //  1) If initial market value is larger than the buy value, Gekko will immediately purchase which could lead to a significant loss
 //  2) If buy is true, trailing stopOrder should only occur once currency has been purchased.
@@ -37,6 +37,13 @@ strat.init = function () {
   if (this.trend.sell && this.trend.sellPrice == 0) {
     this.trend.sell = false;
   }
+
+  if (this.settings.buy && this.settings.sell && this.settings.sellPrice < this.settings.buyPrice) {
+    this.trend.buy = false;
+    this.trend.sell = false;
+    log.debug("The sell price may not be below the buy price. Trade stopped");
+    this.trend.completed = true;
+  }
 }
 
 // What happens on every new candle?
@@ -46,7 +53,7 @@ strat.update = function (candle) {
     // log.debug("Updating Strategy:" + JSON.stringify(candle));
     this.trend.currentValue = candle.close;
     log.debug("Current Value:" + this.trend.currentValue);
-    
+
     if (this.trend.currentValue >= this.trend.highestValue) {
       log.debug("New highest value");
 
@@ -55,7 +62,7 @@ strat.update = function (candle) {
       }
       else {
         //
-        if (this.settings.movingStopValue) {
+        if (this.settings.buy && this.trend.purchased && this.settings.movingStopValue || !this.settings.buy && this.settings.movingStopValue) {
           this.trend.stopValue = this.trend.currentValue - this.settings.trailingValueIncrement;
           log.debug("Updating StopValue to " + this.trend.stopValue);
         }
@@ -81,7 +88,8 @@ strat.check = function () {
   if (!this.trend.completed) {
     log.debug("Checking Strategy");
     log.debug("Completed: " + this.trend.completed);
-    if ((this.trend.currentValue <= this.trend.stopValue) || (this.settings.sell && this.trend.currentValue >= this.settings.sellPrice)) {
+
+    if (this.shouldSell(this.settings, this.trend)) {
       this.advice("short");
       this.trend.completed = true;
 
@@ -93,11 +101,11 @@ strat.check = function () {
     else if (this.shouldBuy(this.settings, this.trend)) {
       this.advice("long");
 
-      // if (this.settings.movingStopValue) {
-      //   // Trade starts here, reset stop value
-      //   this.trend.stopValue = this.trend.currentValue - this.settings.trailingValueIncrement;
-      //   log.debug("Updating StopValue to " + this.trend.stopValue);
-      // }
+      if (this.settings.movingStopValue) {
+        // Trade starts here, reset stop value
+        this.trend.stopValue = this.trend.currentValue - this.settings.trailingValueIncrement;
+        log.debug("Updating StopValue to " + this.trend.stopValue);
+      }
 
       this.trend.purchased = true;
       log.debug(">>>>>buying @", this.trend.currentValue);
@@ -122,7 +130,9 @@ strat.configureFirstRun = function (settings, trend) {
     }
     else {
       log.debug("Use last close value as bases for stop price");
-      trend.stopValue = trend.currentValue - settings.trailingValueIncrement;
+      if (!this.settings.buy && this.settings.movingStopValue) {
+        trend.stopValue = trend.currentValue - settings.trailingValueIncrement;
+      }
     }
 
     log.debug("New StopValue:" + trend.stopValue);
@@ -136,8 +146,17 @@ strat.configureFirstRun = function (settings, trend) {
   if (settings.buy) {
     trend.initialMarketValueHigherThanBuyPrice = trend.currentValue > settings.buyPrice;
     log.debug("InitialMarketValueHigherThanBuyPrice:" + trend.initialMarketValueHigherThanBuyPrice);
-    log.debug(trend.currentValue);
   }
+
+}
+
+
+strat.shouldSell = function (settings, trend) {
+  return (!this.settings.buy && this.trend.currentValue <= this.trend.stopValue) ||
+    (this.settings.buy && this.trend.purchased && this.trend.currentValue <= this.trend.stopValue) ||
+    (!this.settings.buy && this.settings.sell && this.trend.currentValue >= this.settings.sellPrice) ||
+    (this.settings.buy && this.trend.purchased && this.settings.sell && this.trend.currentValue >= this.settings.sellPrice);
+
 }
 
 strat.shouldBuy = function (settings, trend) {
