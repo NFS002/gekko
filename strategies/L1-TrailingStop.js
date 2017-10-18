@@ -2,7 +2,7 @@
 // If buy is set to true the strategy will attempt to buy the currency at the specified buyPrice.
 // If things go as expected and sell is set to true, the stock will be sold at the specified sellPrice.   
 // Lastly, if things don't go that well the stock will be sold at it's stopValue.
-// If the buy and sell is true, the sellPrice must be bigger than the buyPrice.
+// If buy and sell is true, the sellPrice must be larger than the buyPrice.
 // The stopValue is calculated as follows:
 //    if movingStopValue is true, it will be a trailing stopValue(StopValue = HighestValue - trailingValueIncrement),
 //    if not it will be a fixed value specified by initialStopValue.
