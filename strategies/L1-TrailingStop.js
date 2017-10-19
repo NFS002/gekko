@@ -10,6 +10,7 @@
 //    This has had minimal testing so don't trust it.
 // Known Issues:
 //  1) Buy purchase isn't executed on first candle
+//  2) When Buy is false the sell isn't executed. This would be useful if a buy was executed on the trading platform previously
 
 var log = require('../core/log');
 
