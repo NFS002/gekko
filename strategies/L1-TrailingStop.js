@@ -9,9 +9,7 @@
 // Status:
 //    This has had minimal testing so don't trust it.
 // Known Issues:
-//  1) Buy purchase isn't executed on first candle
-//  2) When Buy is false the sell isn't executed. This would be useful if a buy was executed on the trading platform previously
-
+//  1) Buying and selling are done at ask rates which reduce profits significantly
 var log = require('../core/log');
 
 var strat = {};
@@ -39,10 +37,10 @@ strat.init = function () {
     this.trend.sell = false;
   }
 
-  if (this.settings.buy && this.settings.sell && this.settings.sellPrice < this.settings.buyPrice) {
+  if (this.settings.buy && this.settings.sell && this.settings.sellPrice <= this.settings.buyPrice) {
     this.trend.buy = false;
     this.trend.sell = false;
-    log.debug("The sell price may not be below the buy price. Trade stopped");
+    log.debug("The sell price may not be below or equal to the buy price. Trade stopped");
     this.trend.completed = true;
   }
 }
@@ -131,7 +129,7 @@ strat.configureFirstRun = function (settings, trend) {
     }
     else {
       log.debug("Use last close value as bases for stop price");
-      if (!this.settings.buy && this.settings.movingStopValue) {
+      if (!settings.buy && settings.movingStopValue) {
         trend.stopValue = trend.currentValue - settings.trailingValueIncrement;
       }
     }
