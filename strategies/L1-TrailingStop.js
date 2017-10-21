@@ -52,7 +52,8 @@ strat.update = function (candle) {
     // log.debug("Updating Strategy:" + JSON.stringify(candle));
     this.trend.currentValue = candle.close;
     log.debug("Current Value:" + this.trend.currentValue);
-
+    log.debug("Current Stop Value:", this.trend.stopValue);
+    
     if (this.trend.currentValue >= this.trend.highestValue) {
       log.debug("New highest value");
 
@@ -65,10 +66,10 @@ strat.update = function (candle) {
           this.trend.stopValue = this.trend.currentValue - this.settings.trailingValueIncrement;
           log.debug("Updating StopValue to " + this.trend.stopValue);
         }
-      }
 
-      this.trend.highestValue = this.trend.currentValue;
-      log.debug("Highest Value:" + this.trend.highestValue);
+        this.trend.highestValue = this.trend.currentValue;
+        log.debug("Highest Value:" + this.trend.highestValue);
+      }
     }
   }
 }
@@ -76,7 +77,8 @@ strat.update = function (candle) {
 // For debugging purposes.
 strat.log = function () {
   if (!this.trend.completed) {
-    log.debug("Logging Strategy");
+    // log.debug("Logging Strategy");
+    // log.debug(this);
   }
 }
 
@@ -126,6 +128,14 @@ strat.configureFirstRun = function (settings, trend) {
     if (settings.buyPrice > 0) {
       log.debug("Use configured buy price as bases for stop price");
       trend.stopValue = settings.buyPrice - settings.trailingValueIncrement;
+
+      if (!settings.buy && settings.sell) {
+        log.debug("Stock was bought on trading platform previously. We will still be able to sell and apply the stop order");
+        if (settings.buyPrice > trend.currentValue) {
+          trend.highestValue = settings.buyPrice;
+          log.debug("New Highest Value:", settings.buyPrice);          
+        }
+      }
     }
     else {
       log.debug("Use last close value as bases for stop price");
@@ -140,6 +150,14 @@ strat.configureFirstRun = function (settings, trend) {
     log.debug("Use configured initial stop value");
     trend.stopValue = settings.initialStopValue;
     log.debug("New StopValue:" + settings.initialStopValue);
+
+    if (!settings.buy && settings.sell && settings.buyPrice > 0) {
+      log.debug("Stock was bought on trading platform previously. We will still be able to sell and apply the stop order");
+      if (settings.buyPrice > trend.currentValue) {
+        trend.highestValue = settings.buyPrice;
+        log.debug("New Highest Value:", settings.buyPrice);          
+      }
+    }
   }
 
   if (settings.buy) {
