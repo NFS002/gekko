@@ -53,6 +53,7 @@ strat.update = function (candle) {
     this.trend.currentValue = candle.close;
     log.debug("Current Value:" + this.trend.currentValue);
     log.debug("Current Stop Value:", this.trend.stopValue);
+    log.debug("Highest Value:", this.trend.highestValue);
 
     if (this.trend.currentValue >= this.trend.highestValue) {
       log.debug("New highest value");
@@ -133,8 +134,15 @@ strat.configureFirstRun = function (settings, trend) {
         log.debug("Stock was bought on trading platform previously. We will still be able to sell and apply the stop order");
         if (settings.buyPrice > trend.currentValue) {
           trend.highestValue = settings.buyPrice;
-          log.debug("New Highest Value:", settings.buyPrice);          
+          log.debug("New Highest Value:", settings.buyPrice);
         }
+        else {
+          trend.highestValue = trend.currentValue;
+        }
+      }
+      else
+      {
+        trend.highestValue = trend.currentValue;        
       }
     }
     else {
@@ -155,7 +163,10 @@ strat.configureFirstRun = function (settings, trend) {
       log.debug("Stock was bought on trading platform previously. We will still be able to sell and apply the stop order");
       if (settings.buyPrice > trend.currentValue) {
         trend.highestValue = settings.buyPrice;
-        log.debug("New Highest Value:", settings.buyPrice);          
+        log.debug("New Highest Value:", settings.buyPrice);
+      }
+      else {
+        trend.highestValue = trend.currentValue;
       }
     }
   }
